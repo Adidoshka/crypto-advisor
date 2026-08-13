@@ -39,16 +39,17 @@ Backend requires a `.env` (see `backend/.env.example`):
 
 ## Architecture
 
-**Backend** (`backend/src`): Express + Mongoose, plain `router.get/post` handlers (no controller/service layering — each route file in `routes/` owns its logic end-to-end).
+**Backend** (`backend/src`): Express + Mongoose, thin `router.get/post` handlers that delegate all persistence to a repository layer (`repositories/`) rather than importing Models directly — routes still own request validation and response shaping end-to-end, they just don't touch `Model.find*`/`findOneAndUpdate` themselves.
 
-- `index.ts` — app entry: wires CORS, JSON body parsing, mounts all routers under `/api/*`, exposes `/api/health` (pings Mongo), connects to DB before `listen`.
-- `config/db.ts` — Mongoose connect/ping helpers.
-- `models/` — `User`, `Preference` (1:1 with User via unique `userId`), `Vote` (compound unique index on `userId+section+itemId`, so a vote is an upsert-by-key, not an append-only log).
+- `index.ts` — app entry: fails fast if `JWT_SECRET` is unset, wires CORS, JSON body parsing, mounts all routers under `/api/*`, exposes `/api/health` (pings Mongo), connects to DB before `listen`.
+- `config/db.ts` — Mongoose connect/ping helpers. This *is* the connection pool (Mongoose Models share the one default connection) — there's no separate pool wrapper.
+- `models/` — `User` (`password` is `select: false` and `minlength: 8` — never comes back on a plain query, must opt in), `Preference` (1:1 with User via unique `userId`; `assets`/`investorType`/`contentTypes` are `enum`-constrained against the vocab constants `Preference.ts` exports, which must stay in sync with the frontend's `Onboarding.tsx` toggle lists by convention — no shared package), `Vote` (compound unique index on `userId+section+itemId`, so a vote is an upsert-by-key, not an append-only log; `section` is enum-constrained to `prices|news|insight|meme`).
+- `repositories/` — `BaseRepository<T>` wraps a single Mongoose `Model<T>` with the primitives every repo needs (`create`, `findOne`, `find`, `upsert` — `upsert` always passes `runValidators: true`, since `findOneAndUpdate` skips schema validators by default). `UserRepository`/`PreferenceRepository`/`VoteRepository` subclass it with named, domain-specific queries (`findByEmail`, `findByUserId`, `upsertVote`, etc.). `provider.ts` exposes a lazy-singleton `getRepos()` (plus `resetRepos()` for future test isolation) — routes call `getRepos().user.findByEmail(...)` rather than constructing repositories themselves.
 - `middleware/auth.ts` — `authenticate` reads `Authorization: Bearer <jwt>`, verifies with `JWT_SECRET`, sets `req.userId`. Applied per-route, not globally.
-- `routes/auth.ts` — register/login, bcrypt password hashing, issues 7-day JWTs. Login response includes `hasPreferences` so the frontend knows whether to route to onboarding.
+- `routes/auth.ts` — register/login, async bcrypt hashing/comparison, issues 7-day JWTs. Register distinguishes a real duplicate-key error (`err.code === 11000` → 409) from any other failure (→ 500), rather than assuming every failure means a duplicate email. Login response includes `hasPreferences` so the frontend knows whether to route to onboarding.
 - `routes/preferences.ts` — get/upsert the current user's `Preference` doc.
 - `routes/dashboard.ts` — the aggregation endpoint. Fetches prices (CoinGecko), news (CryptoPanic if key present, else static fallback), and an AI insight (OpenRouter `mistralai/mistral-7b-instruct:free` if key present, else canned string) **in parallel** via `Promise.all`, plus a random static meme. Every external call has an 8–15s timeout and a non-throwing fallback — this endpoint should never 500 due to a third-party outage.
-- `routes/votes.ts` — upsert a vote (`findOneAndUpdate` with `upsert: true` keyed on `userId+section+itemId`), and list the current user's votes.
+- `routes/votes.ts` — upsert a vote keyed on `userId+section+itemId`, and list the current user's votes.
 
 **Frontend** (`frontend/src`): React 19 + React Router 7, no state library — auth state lives in `AuthContext` (JWT in `localStorage`), page-level state is local `useState`/`useEffect`. Styling is Tailwind v4 utility classes only, dark theme (slate/amber palette), no component library.
 

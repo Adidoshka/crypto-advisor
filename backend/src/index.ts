@@ -23,6 +23,11 @@ app.get('/api/health', async (_req, res) => {
   res.status(db ? 200 : 503).json({ status: db ? 'ok' : 'degraded', db });
 });
 
+if (!process.env.JWT_SECRET) {
+  console.error('JWT_SECRET is not set');
+  process.exit(1);
+}
+
 connectDB()
   .then(() => app.listen(PORT, () => console.log(`Backend running on http://localhost:${PORT}`)))
   .catch((err) => { console.error('DB connection failed:', err); process.exit(1); });

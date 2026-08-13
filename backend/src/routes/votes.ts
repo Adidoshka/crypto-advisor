@@ -1,5 +1,5 @@
 import { Router, Response } from 'express';
-import { Vote } from '../models/Vote';
+import { getRepos } from '../repositories/provider';
 import { authenticate, AuthRequest } from '../middleware/auth';
 
 const router = Router();
@@ -15,16 +15,22 @@ router.post('/', authenticate, async (req: AuthRequest, res: Response): Promise<
     res.status(400).json({ error: 'section, itemId, and value (1 or -1) are required' });
     return;
   }
-  await Vote.findOneAndUpdate(
-    { userId: req.userId, section, itemId },
-    { value, contentSnapshot },
-    { upsert: true, new: true },
-  );
-  res.json({ success: true });
+  const userId = req.userId!; // set by `authenticate`
+  try {
+    await getRepos().vote.upsertVote(userId, section, itemId, value, contentSnapshot);
+    res.json({ success: true });
+  } catch (err) {
+    if (err instanceof Error && err.name === 'ValidationError') {
+      res.status(400).json({ error: 'Invalid vote: section must be one of prices, news, insight, meme' });
+      return;
+    }
+    console.error('Failed to save vote:', err);
+    res.status(500).json({ error: 'Failed to save vote' });
+  }
 });
 
 router.get('/', authenticate, async (req: AuthRequest, res: Response): Promise<void> => {
-  const rows = await Vote.find({ userId: req.userId }).select('section itemId value -_id');
+  const rows = await getRepos().vote.listByUser(req.userId!);
   res.json(rows);
 });
 
