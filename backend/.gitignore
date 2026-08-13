@@ -1,0 +1,14 @@
+# dependencies
+node_modules/
+
+# build output
+dist/
+
+# environment variables
+.env
+
+# leftover SQLite artifacts (project uses MongoDB)
+data/
+
+# TypeScript cache
+*.tsbuildinfo
