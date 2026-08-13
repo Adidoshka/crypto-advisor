@@ -1,11 +1,12 @@
 import { Router, Response } from 'express';
-import { Preference } from '../models/Preference';
+import { getRepos } from '../repositories/provider';
 import { authenticate, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 
 router.get('/', authenticate, async (req: AuthRequest, res: Response): Promise<void> => {
-  const prefs = await Preference.findOne({ userId: req.userId });
+  const userId = req.userId!; // set by `authenticate`
+  const prefs = await getRepos().preference.findByUserId(userId);
   if (!prefs) {
     res.json(null);
     return;
@@ -23,12 +24,18 @@ router.post('/', authenticate, async (req: AuthRequest, res: Response): Promise<
     res.status(400).json({ error: 'assets, investorType and contentTypes are required' });
     return;
   }
-  await Preference.findOneAndUpdate(
-    { userId: req.userId },
-    { assets, investorType, contentTypes },
-    { upsert: true, new: true },
-  );
-  res.json({ success: true });
+  const userId = req.userId!; // set by `authenticate`
+  try {
+    await getRepos().preference.upsertForUser(userId, { assets, investorType, contentTypes });
+    res.json({ success: true });
+  } catch (err) {
+    if (err instanceof Error && err.name === 'ValidationError') {
+      res.status(400).json({ error: 'Invalid preferences: assets, investorType, and contentTypes must be from the allowed lists' });
+      return;
+    }
+    console.error('Failed to save preferences:', err);
+    res.status(500).json({ error: 'Failed to save preferences' });
+  }
 });
 
 export default router;

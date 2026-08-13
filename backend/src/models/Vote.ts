@@ -12,7 +12,8 @@ export interface IVote extends Document {
 const voteSchema = new Schema<IVote>(
   {
     userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    section: { type: String, required: true },
+    // Matches the sectionKey values Dashboard.tsx passes when voting.
+    section: { type: String, required: true, enum: ['prices', 'news', 'insight', 'meme'] },
     itemId: { type: String, required: true },
     value: { type: Number, enum: [1, -1], required: true },
     contentSnapshot: { type: String },

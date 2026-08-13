@@ -1,6 +1,6 @@
 import { Router, Response } from 'express';
 import { authenticate, AuthRequest } from '../middleware/auth';
-import { Preference } from '../models/Preference';
+import { getRepos } from '../repositories/provider';
 
 const router = Router();
 
@@ -87,7 +87,7 @@ async function fetchAiInsight(assets: string[], investorType: string): Promise<s
 }
 
 router.get('/', authenticate, async (req: AuthRequest, res: Response): Promise<void> => {
-  const prefs = await Preference.findOne({ userId: req.userId });
+  const prefs = await getRepos().preference.findByUserId(req.userId!);
 
   if (!prefs) {
     res.status(404).json({ error: 'No preferences found' });
