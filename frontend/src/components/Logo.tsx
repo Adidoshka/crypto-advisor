@@ -1,8 +1,6 @@
 import logo from '../assets/logo.png';
 
-// Shared between Login and Register — the one deliberate exception to
-// colocating subcomponents in their page file, since both pages need the
-// identical mark.
+// Shared between Login and Register, both of which need the identical mark.
 export default function Logo({ showWordmark = false }: { showWordmark?: boolean }) {
   return (
     <div className="flex items-center gap-3">

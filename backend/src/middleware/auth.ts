@@ -13,7 +13,7 @@ export function authenticate(req: AuthRequest, res: Response, next: NextFunction
   }
   const token = header.slice(7);
   try {
-    const payload = jwt.verify(token, process.env.JWT_SECRET as string) as { userId: string };
+    const payload = jwt.verify(token, process.env.JWT_SECRET as string, { algorithms: ['HS256'] }) as { userId: string };
     req.userId = payload.userId;
     next();
   } catch {

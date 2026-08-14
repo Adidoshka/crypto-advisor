@@ -1,27 +1,10 @@
 import 'dotenv/config';
-import express from 'express';
-import cors from 'cors';
-import { connectDB, pingDB } from './config/db';
-import authRoutes from './routes/auth';
-import preferencesRoutes from './routes/preferences';
-import dashboardRoutes from './routes/dashboard';
-import votesRoutes from './routes/votes';
+import app from './app';
+import { connectDB } from './config/db';
 
-const app = express();
-const PORT = process.env.PORT ?? 4000;
-
-app.use(cors({ origin: process.env.FRONTEND_URL ?? 'http://localhost:5173', credentials: true }));
-app.use(express.json());
-
-app.use('/api/auth', authRoutes);
-app.use('/api/preferences', preferencesRoutes);
-app.use('/api/dashboard', dashboardRoutes);
-app.use('/api/votes', votesRoutes);
-
-app.get('/api/health', async (_req, res) => {
-  const db = await pingDB();
-  res.status(db ? 200 : 503).json({ status: db ? 'ok' : 'degraded', db });
-});
+// `||`, not `??` — same reasoning as NVIDIA_MODEL in dashboard.ts: a blank
+// (present-but-empty) env var isn't nullish, so ?? wouldn't fall back.
+const PORT = process.env.PORT || 4000;
 
 if (!process.env.JWT_SECRET) {
   console.error('JWT_SECRET is not set');

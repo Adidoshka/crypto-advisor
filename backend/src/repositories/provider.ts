@@ -11,11 +11,7 @@ class RepositoryProvider {
 
 let _provider: RepositoryProvider | null = null;
 
-/**
- * Lazy singleton. Node has no thread-safety concern here (single event
- * loop), so unlike a multi-threaded host this needs no locking — a plain
- * null-check is enough.
- */
+/** Lazy singleton — a plain null-check suffices since Node's single event loop has no thread-safety concern. */
 export function getRepos(): RepositoryProvider {
   if (!_provider) _provider = new RepositoryProvider();
   return _provider;

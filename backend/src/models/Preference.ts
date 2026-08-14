@@ -1,9 +1,6 @@
 import { Schema, model, Document, Types } from 'mongoose';
 
-// Closed vocabularies for onboarding answers. Must stay in sync with the
-// frontend's toggle lists in frontend/src/pages/Onboarding.tsx
-// (CRYPTO_ASSETS / INVESTOR_TYPES / CONTENT_TYPES) — the two apps share no
-// package, so this pairing is manual by convention, not enforced by types.
+// Closed vocabularies for onboarding answers — must stay in sync by convention with the toggle lists in frontend/src/pages/Onboarding.tsx.
 export const CRYPTO_ASSETS = [
   'Bitcoin',
   'Ethereum',
@@ -28,8 +25,7 @@ export interface IPreference extends Document {
   assets: string[];
   investorType: string;
   contentTypes: string[];
-  // "AI Insight of the Day" cache — one OpenRouter call per user per day
-  // instead of one per dashboard load, since the free tier caps at 50/day.
+  // Cached AI insight — one provider call per user per day, not per dashboard load.
   cachedInsight?: string;
   cachedInsightDate?: string; // 'YYYY-MM-DD' (UTC)
 }
@@ -38,7 +34,8 @@ const preferenceSchema = new Schema<IPreference>(
   {
     userId: { type: Schema.Types.ObjectId, ref: 'User', required: true, unique: true },
     assets: { type: [String], enum: CRYPTO_ASSETS, default: [] },
-    investorType: { type: String, enum: INVESTOR_TYPES },
+    // required: true makes IPreference's non-optional `investorType: string` claim actually enforced at the schema level.
+    investorType: { type: String, enum: INVESTOR_TYPES, required: true },
     contentTypes: { type: [String], enum: CONTENT_TYPES, default: [] },
     cachedInsight: { type: String },
     cachedInsightDate: { type: String },

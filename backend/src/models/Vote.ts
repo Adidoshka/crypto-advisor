@@ -5,7 +5,7 @@ export interface IVote extends Document {
   section: string;
   itemId: string;
   value: 1 | -1;
-  // snapshot stored for future model training
+  // Snapshot stored for future model training.
   contentSnapshot?: string;
 }
 
@@ -16,7 +16,8 @@ const voteSchema = new Schema<IVote>(
     section: { type: String, required: true, enum: ['prices', 'news', 'insight', 'meme'] },
     itemId: { type: String, required: true },
     value: { type: Number, enum: [1, -1], required: true },
-    contentSnapshot: { type: String },
+    // Capped to stop a single vote from bloating storage — not the primary size defense, that's Express's body-size limit.
+    contentSnapshot: { type: String, maxlength: 1000 },
   },
   { timestamps: true },
 );
