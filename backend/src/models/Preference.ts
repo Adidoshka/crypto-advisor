@@ -10,20 +10,28 @@ export const CRYPTO_ASSETS = [
   'Solana',
   'Cardano',
   'Polkadot',
-  'Chainlink',
-  'Dogecoin',
   'Avalanche',
+  'Chainlink',
+  'Polygon',
+  'Near Protocol',
+  'Cosmos',
+  'Uniswap',
+  'Aptos',
 ] as const;
 
-export const INVESTOR_TYPES = ['HODLer', 'Day Trader', 'NFT Collector', 'DeFi Explorer', 'Swing Trader'] as const;
+export const INVESTOR_TYPES = ['HODLer', 'Day Trader', 'NFT Collector', 'DeFi Explorer'] as const;
 
-export const CONTENT_TYPES = ['Market News', 'Coin Prices', 'AI Insights', 'Memes & Fun'] as const;
+export const CONTENT_TYPES = ['Market News', 'Price Charts', 'AI Insights', 'Social Buzz', 'Fun Memes'] as const;
 
 export interface IPreference extends Document {
   userId: Types.ObjectId;
   assets: string[];
   investorType: string;
   contentTypes: string[];
+  // "AI Insight of the Day" cache — one OpenRouter call per user per day
+  // instead of one per dashboard load, since the free tier caps at 50/day.
+  cachedInsight?: string;
+  cachedInsightDate?: string; // 'YYYY-MM-DD' (UTC)
 }
 
 const preferenceSchema = new Schema<IPreference>(
@@ -32,6 +40,8 @@ const preferenceSchema = new Schema<IPreference>(
     assets: { type: [String], enum: CRYPTO_ASSETS, default: [] },
     investorType: { type: String, enum: INVESTOR_TYPES },
     contentTypes: { type: [String], enum: CONTENT_TYPES, default: [] },
+    cachedInsight: { type: String },
+    cachedInsightDate: { type: String },
   },
   { timestamps: true },
 );

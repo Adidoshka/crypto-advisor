@@ -1,5 +1,12 @@
 @import "tailwindcss";
 
+@theme {
+  --color-brand-cyan: #00f0ff;
+  --color-brand-green: #10b981;
+  --color-brand-deep: #070a16;
+  --font-outfit: "Outfit", sans-serif;
+}
+
 body {
   background-color: #0f172a;
   color: #e2e8f0;
