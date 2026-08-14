@@ -14,4 +14,8 @@ export class PreferenceRepository extends BaseRepository<IPreference> {
   upsertForUser(userId: string, data: Pick<IPreference, 'assets' | 'investorType' | 'contentTypes'>) {
     return this.upsert({ userId }, data);
   }
+
+  cacheInsight(userId: string, insight: string, date: string) {
+    return this.upsert({ userId }, { cachedInsight: insight, cachedInsightDate: date });
+  }
 }
