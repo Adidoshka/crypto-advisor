@@ -16,7 +16,7 @@ Backend (`backend/`):
 npm run dev     # ts-node-dev with auto-respawn, http://localhost:4000
 npm run build   # tsc -> dist/ (only compiles src/; tests/ lives outside it, so it's never part of the build)
 npm start       # run compiled dist/index.js
-npm test        # vitest run — 4 files under tests/, 19 tests; mongodb-memory-server spins up a real
+npm test        # vitest run — 4 files under tests/, 20 tests; mongodb-memory-server spins up a real
                 # in-memory Mongo per test file that needs one (pure-logic tests, e.g. dashboard.test.ts,
                 # skip it entirely), no external DB or network needed
 ```

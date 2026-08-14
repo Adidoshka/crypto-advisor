@@ -14,7 +14,7 @@ const voteSchema = new Schema<IVote>(
     userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     // Matches the sectionKey values Dashboard.tsx passes when voting.
     section: { type: String, required: true, enum: ['prices', 'news', 'insight', 'meme'] },
-    itemId: { type: String, required: true },
+    itemId: { type: String, required: true, maxlength: 500 },
     value: { type: Number, enum: [1, -1], required: true },
     // Capped to stop a single vote from bloating storage — not the primary size defense, that's Express's body-size limit.
     contentSnapshot: { type: String, maxlength: 1000 },

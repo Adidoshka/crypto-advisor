@@ -52,4 +52,9 @@ describe('VoteRepository.upsertVote', () => {
   it('rejects a contentSnapshot over 1000 chars', async () => {
     await expect(voteRepo.upsertVote(userId, 'insight', 'daily', 1, 'x'.repeat(1001))).rejects.toThrow();
   });
+
+  // itemId is part of the unique index and fully client-controlled — schema must bound it, not just Express's body-size limit.
+  it('rejects an itemId over 500 chars', async () => {
+    await expect(voteRepo.upsertVote(userId, 'prices', 'x'.repeat(501), 1)).rejects.toThrow();
+  });
 });

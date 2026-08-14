@@ -4,7 +4,7 @@
 ![TypeScript](https://img.shields.io/badge/typescript-5%2F6-3178C6?logo=typescript&logoColor=white)
 ![Express](https://img.shields.io/badge/express-4.19-black?logo=express)
 ![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?logo=mongodb&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-19%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-20%20passing-brightgreen)
 ![CI](https://img.shields.io/badge/CI-GitHub%20Actions-2088FF?logo=githubactions&logoColor=white)
 ![Deployed](https://img.shields.io/badge/status-deployed-success)
 
@@ -16,7 +16,7 @@ A personalized crypto investor dashboard, built for the Moveo "AI Crypto Advisor
 - **Express backend** — repository-pattern data layer over Mongoose, deployed on Render
 - **MongoDB Atlas** — Users, Preferences (enum-validated), Votes (upsert-by-key)
 - **Three live external integrations** — CoinGecko (prices), free public RSS feeds (news), NVIDIA NIM (AI insight) — each with an independent, non-throwing fallback
-- **Vitest test suite** — 19 tests across schema validation, repository regression guards, and route integration/logic
+- **Vitest test suite** — 20 tests across schema validation, repository regression guards, and route integration/logic
 - **CI pipeline** — build + test on every push/PR via GitHub Actions
 
 **Live app:** <https://coinsage-adidoshka.vercel.app>
@@ -56,7 +56,7 @@ See [CLAUDE.md](CLAUDE.md) for the full file-by-file architecture walkthrough an
 
    ```bash
    cd backend
-   npm test                 # Vitest, 19 tests, in-memory Mongo for DB-touching tests — no real DB needed
+   npm test                 # Vitest, 20 tests, in-memory Mongo for DB-touching tests — no real DB needed
    ```
 
 ## 📐 Architecture
@@ -127,7 +127,7 @@ News has no key to configure — see below.
 
 ## 🧪 Testing
 
-19 Vitest tests across 4 files under `backend/tests/` (mirrors `src/`'s folder layout); tests that touch the DB run against an in-memory MongoDB (`mongodb-memory-server`) — no external DB or network required:
+20 Vitest tests across 4 files under `backend/tests/` (mirrors `src/`'s folder layout); tests that touch the DB run against an in-memory MongoDB (`mongodb-memory-server`) — no external DB or network required:
 
 | File | Focus |
 | --- | --- |
