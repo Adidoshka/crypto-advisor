@@ -9,7 +9,9 @@ import logo from '../assets/logo.png';
 interface CoinPrice {
   id: string;
   name: string;
-  symbol: string;
+  // Optional, not string — dashboard.ts's fetchPrices fallback (used when
+  // CoinGecko fails) returns objects with no symbol field at all.
+  symbol?: string;
   current_price: number | null;
   price_change_percentage_24h: number | null;
   image?: string;
@@ -38,6 +40,13 @@ interface DashboardData {
 }
 
 type VoteMap = Record<string, number>;
+
+// Inline SVG fallback for a broken meme image — no external service dependency for a fallback path.
+const MEME_FALLBACK_SVG =
+  'data:image/svg+xml,' +
+  encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200"><rect width="400" height="200" fill="#070a16"/><text x="200" y="105" fill="#64748b" font-family="sans-serif" font-size="16" text-anchor="middle">Meme unavailable</text></svg>',
+  );
 
 function getGreeting() {
   const h = new Date().getHours();
@@ -136,12 +145,17 @@ export default function Dashboard() {
 
   async function handleVote(section: string, itemId: string, value: 1 | -1) {
     const key = `${section}:${itemId}`;
+    const previous = votes[key]; // restore this exact value on failure, not just clear it
     setVotes((prev) => ({ ...prev, [key]: value }));
     try {
       await api.post('/votes', { section, itemId, value });
     } catch {
-      // revert on failure
-      setVotes((prev) => { const next = { ...prev }; delete next[key]; return next; });
+      setVotes((prev) => {
+        const next = { ...prev };
+        if (previous === undefined) delete next[key];
+        else next[key] = previous;
+        return next;
+      });
     }
   }
 
@@ -248,7 +262,7 @@ export default function Dashboard() {
                               <img src={coin.image} alt={coin.name} className="w-8 h-8 rounded-full" />
                             ) : (
                               <span className="w-8 h-8 rounded-full bg-brand-cyan/10 border border-brand-cyan/30 flex items-center justify-center text-[10px] font-bold text-brand-cyan">
-                                {coin.symbol?.slice(0, 3).toUpperCase()}
+                                {(coin.symbol ?? coin.name).slice(0, 3).toUpperCase()}
                               </span>
                             )}
                             <div>
@@ -353,8 +367,7 @@ export default function Dashboard() {
                 alt={data.meme.title}
                 className="w-full max-h-64 object-contain rounded-xl bg-slate-950"
                 onError={(e) => {
-                  (e.target as HTMLImageElement).src =
-                    'https://via.placeholder.com/400x200/070a16/64748b?text=Meme+unavailable';
+                  (e.target as HTMLImageElement).src = MEME_FALLBACK_SVG;
                 }}
               />
               <p className="text-slate-400 text-sm mt-3">{data.meme.title}</p>

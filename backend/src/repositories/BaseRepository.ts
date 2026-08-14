@@ -1,14 +1,6 @@
 import { Document, Model, QueryFilter, UpdateQuery } from 'mongoose';
 
-/**
- * Thin wrapper around a single Mongoose Model, holding only the query
- * primitives every repository ends up needing. Subclasses add
- * domain-specific, named queries on top (see UserRepository etc.) rather
- * than routes ever importing a Model directly.
- *
- * Return types are left to inference rather than hand-typed against
- * mongoose's Query<...> generics, which change shape across versions.
- */
+/** Thin wrapper around a single Mongoose Model with the query primitives every repository needs; subclasses add domain-specific queries on top. */
 export abstract class BaseRepository<T extends Document> {
   constructor(protected readonly model: Model<T>) {}
 
@@ -25,8 +17,7 @@ export abstract class BaseRepository<T extends Document> {
   }
 
   upsert(filter: QueryFilter<T>, update: UpdateQuery<T>) {
-    // runValidators is required here — findOneAndUpdate skips schema
-    // validators (enum, minlength, etc.) by default, unlike .save().
+    // Required: findOneAndUpdate skips schema validators by default, unlike .save().
     return this.model.findOneAndUpdate(filter, update, {
       upsert: true,
       returnDocument: 'after',

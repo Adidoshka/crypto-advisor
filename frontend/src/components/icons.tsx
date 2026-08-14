@@ -1,5 +1,4 @@
-// Shared between Login and Register — same reasoning as Logo.tsx: this hand-authored
-// SVG path data was previously duplicated identically across both page files.
+// Shared between Login and Register, which previously duplicated this hand-authored SVG path data identically.
 export function UserIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">

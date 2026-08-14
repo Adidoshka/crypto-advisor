@@ -1,6 +1,4 @@
-// Decorative marketing content for the Login/Register left panel — hardcoded
-// numbers, not real data (same non-functional-decoration pattern as the static
-// meme fallback in dashboard.ts). Shared to avoid duplicating it across both pages.
+// Decorative marketing content for the Login/Register left panel — hardcoded numbers, not real data.
 export default function SentimentCard() {
   return (
     <div className="rounded-2xl border border-white/10 bg-black/30 p-5 backdrop-blur-sm">

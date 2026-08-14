@@ -11,8 +11,9 @@ export class PreferenceRepository extends BaseRepository<IPreference> {
     return this.findOne({ userId }).lean();
   }
 
+  // userId repeated in the update body for consistency with VoteRepository.upsertVote's pattern, though harmless either way here.
   upsertForUser(userId: string, data: Pick<IPreference, 'assets' | 'investorType' | 'contentTypes'>) {
-    return this.upsert({ userId }, data);
+    return this.upsert({ userId }, { userId, ...data });
   }
 
   cacheInsight(userId: string, insight: string, date: string) {
