@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import api from '../services/api';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import AuthLayout from '../components/AuthLayout';
 import FormField from '../components/FormField';
 import { MailIcon, LockIcon, EyeIcon } from '../components/icons';
@@ -9,6 +9,8 @@ import { MailIcon, LockIcon, EyeIcon } from '../components/icons';
 export default function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const justRegistered = Boolean((location.state as { justRegistered?: boolean } | null)?.justRegistered);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -21,7 +23,7 @@ export default function Login() {
     setIsSubmitting(true);
     try {
       const { data } = await api.post('/auth/login', { email, password });
-      login(data.token, data.name);
+      login(data.token, data.name, data.hasPreferences);
       navigate(data.hasPreferences ? '/dashboard' : '/onboarding');
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error;
@@ -32,9 +34,14 @@ export default function Login() {
 
   return (
     <AuthLayout>
-      <h2 className="font-outfit font-bold text-3xl text-white mb-1">Welcome Back</h2>
-      <p className="text-slate-400 text-sm mb-8">Please enter your details to access your investor cockpit.</p>
+      <h2 className="font-outfit font-bold text-3xl 2xl:text-4xl text-white mb-1">Welcome Back</h2>
+      <p className="text-slate-400 text-sm 2xl:text-base mb-8">
+        Please enter your details to access your investor cockpit.
+      </p>
 
+      {justRegistered && !error && (
+        <p className="text-brand-green text-sm mb-4">Account created — log in to continue.</p>
+      )}
       {error && <p className="text-red-400 text-sm mb-4">{error}</p>}
 
       <form onSubmit={handleSubmit} className="space-y-5">
@@ -68,7 +75,7 @@ export default function Login() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full bg-brand-cyan hover:brightness-110 disabled:opacity-60 text-slate-950 font-semibold rounded-lg py-2.5 transition"
+          className="w-full bg-brand-cyan hover:brightness-110 disabled:opacity-60 text-slate-950 font-semibold rounded-lg py-2.5 2xl:py-3.5 2xl:text-lg transition"
         >
           {isSubmitting ? 'Signing In…' : 'Log In'}
         </button>

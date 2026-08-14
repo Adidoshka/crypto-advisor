@@ -2,6 +2,7 @@ import { useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import Logo from '../components/Logo';
+import { useAuth } from '../context/useAuth';
 
 const CRYPTO_ASSETS = [
   'Bitcoin',
@@ -88,6 +89,7 @@ function Toggle({ label, selected, onToggle }: { label: string; selected: boolea
 
 export default function Onboarding() {
   const navigate = useNavigate();
+  const { completeOnboarding } = useAuth();
   const [step, setStep] = useState(0);
   const [assets, setAssets] = useState<string[]>([]);
   const [investorType, setInvestorType] = useState('');
@@ -102,6 +104,7 @@ export default function Onboarding() {
     setError('');
     try {
       await api.post('/preferences', { assets, investorType, contentTypes });
+      completeOnboarding();
       navigate('/dashboard');
     } catch {
       setError('Failed to save preferences. Please try again.');

@@ -26,7 +26,7 @@ export default function FormField({
 }) {
   return (
     <div>
-      <label className="block text-sm text-slate-300 mb-1.5">{label}</label>
+      <label className="block text-sm 2xl:text-base text-slate-300 mb-1.5">{label}</label>
       <div className="relative">
         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">{icon}</span>
         <input
@@ -36,11 +36,11 @@ export default function FormField({
           placeholder={placeholder}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className={`w-full bg-slate-900/60 border border-slate-700 rounded-lg pl-10 ${rightElement ? 'pr-10' : 'pr-3'} py-2.5 text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-brand-cyan transition`}
+          className={`w-full bg-slate-900/60 border border-slate-700 rounded-lg pl-10 ${rightElement ? 'pr-10' : 'pr-3'} py-2.5 2xl:py-3.5 text-slate-100 2xl:text-lg placeholder:text-slate-600 focus:outline-none focus:border-brand-cyan transition`}
         />
         {rightElement}
       </div>
-      {helperText && <p className="text-xs text-slate-500 mt-1.5">{helperText}</p>}
+      {helperText && <p className="text-xs 2xl:text-sm text-slate-500 mt-1.5">{helperText}</p>}
     </div>
   );
 }

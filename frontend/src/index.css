@@ -12,3 +12,15 @@ body {
   color: #e2e8f0;
   font-family: system-ui, sans-serif;
 }
+
+/* Chrome/Edge paint autofilled inputs with their own light background, ignoring the input's own
+   dark Tailwind classes. The box-shadow inset is the standard trick to override it. */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #f1f5f9;
+  -webkit-box-shadow: 0 0 0 1000px rgba(15, 23, 42, 0.85) inset;
+  box-shadow: 0 0 0 1000px rgba(15, 23, 42, 0.85) inset;
+  transition: background-color 9999s ease-in-out 0s;
+  caret-color: #f1f5f9;
+}

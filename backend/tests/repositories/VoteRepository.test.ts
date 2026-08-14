@@ -42,4 +42,14 @@ describe('VoteRepository.upsertVote', () => {
     expect(rows).toHaveLength(1);
     expect(rows[0].value).toBe(-1);
   });
+
+  it('persists a contentSnapshot when given one', async () => {
+    const doc = await voteRepo.upsertVote(userId, 'meme', 'm1', 1, 'When Bitcoin dips 10% (https://i.imgflip.com/2kbn1e.jpg)');
+    expect(doc?.contentSnapshot).toBe('When Bitcoin dips 10% (https://i.imgflip.com/2kbn1e.jpg)');
+  });
+
+  // Schema enforces maxlength: 1000 — the frontend must truncate before sending, this is why.
+  it('rejects a contentSnapshot over 1000 chars', async () => {
+    await expect(voteRepo.upsertVote(userId, 'insight', 'daily', 1, 'x'.repeat(1001))).rejects.toThrow();
+  });
 });

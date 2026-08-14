@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ResponsiveContainer, AreaChart, Area, Tooltip } from 'recharts';
 import api from '../services/api';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import Logo from '../components/Logo';
 import logo from '../assets/logo.png';
 
@@ -55,16 +55,38 @@ function getGreeting() {
   return 'Good Evening';
 }
 
+// The AI insight is prompted as plain text but sometimes comes back with light Markdown anyway — render bold/line breaks without a markdown dependency.
+function renderInsight(text: string) {
+  return text
+    .split(/\n+/)
+    .filter(Boolean)
+    .map((paragraph, i) => (
+      <p key={i} className="text-slate-300 text-sm leading-relaxed">
+        {paragraph.split(/(\*\*.+?\*\*)/g).map((chunk, j) =>
+          chunk.startsWith('**') && chunk.endsWith('**') ? (
+            <strong key={j} className="text-white font-semibold">
+              {chunk.slice(2, -2)}
+            </strong>
+          ) : (
+            chunk
+          ),
+        )}
+      </p>
+    ));
+}
+
 function VoteButtons({
   sectionKey,
   itemId,
+  contentSnapshot,
   votes,
   onVote,
 }: {
   sectionKey: string;
   itemId: string;
+  contentSnapshot?: string;
   votes: VoteMap;
-  onVote: (section: string, itemId: string, value: 1 | -1) => void;
+  onVote: (section: string, itemId: string, value: 1 | -1, contentSnapshot?: string) => void;
 }) {
   const key = `${sectionKey}:${itemId}`;
   const current = votes[key];
@@ -72,7 +94,7 @@ function VoteButtons({
     <div className="flex items-center gap-2 mt-3 pt-3 border-t border-white/5">
       <span className="text-xs text-slate-500 mr-auto">Was this useful?</span>
       <button
-        onClick={() => onVote(sectionKey, itemId, 1)}
+        onClick={() => onVote(sectionKey, itemId, 1, contentSnapshot)}
         title="Thumbs up"
         className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg border transition ${
           current === 1
@@ -83,7 +105,7 @@ function VoteButtons({
         👍
       </button>
       <button
-        onClick={() => onVote(sectionKey, itemId, -1)}
+        onClick={() => onVote(sectionKey, itemId, -1, contentSnapshot)}
         title="Thumbs down"
         className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg border transition ${
           current === -1
@@ -143,12 +165,13 @@ export default function Dashboard() {
     loadDashboard();
   }, [loadDashboard]);
 
-  async function handleVote(section: string, itemId: string, value: 1 | -1) {
+  async function handleVote(section: string, itemId: string, value: 1 | -1, contentSnapshot?: string) {
     const key = `${section}:${itemId}`;
     const previous = votes[key]; // restore this exact value on failure, not just clear it
     setVotes((prev) => ({ ...prev, [key]: value }));
     try {
-      await api.post('/votes', { section, itemId, value });
+      // truncate to the schema's maxlength so an oversized snapshot never round-trips into a validation error
+      await api.post('/votes', { section, itemId, value, contentSnapshot: contentSnapshot?.slice(0, 1000) });
     } catch {
       setVotes((prev) => {
         const next = { ...prev };
@@ -167,16 +190,26 @@ export default function Dashboard() {
   const firstName = name?.split(' ')[0] ?? 'there';
   const initial = name?.charAt(0).toUpperCase() ?? '?';
 
+  // One vote per section as a whole (not per coin/article) — summarize every item shown into a single snapshot.
+  const pricesSnapshot = data?.prices
+    .map(
+      (c) =>
+        `${c.name}: ${c.current_price != null ? `$${c.current_price.toLocaleString()}` : 'N/A'} (${
+          c.price_change_percentage_24h != null
+            ? `${c.price_change_percentage_24h >= 0 ? '+' : ''}${c.price_change_percentage_24h.toFixed(2)}%`
+            : 'N/A'
+        })`,
+    )
+    .join('; ');
+  const newsSnapshot = data?.news.map((item) => `${item.title} — ${item.source?.title ?? 'Unknown'}`).join('; ');
+
   return (
     <div className="min-h-screen bg-brand-deep">
       <header className="flex items-center justify-between px-6 md:px-10 py-4 border-b border-white/10">
         <div className="flex items-center gap-10">
-          <Logo showWordmark />
+          <Logo showWordmark size="nav" />
           <nav className="hidden md:flex items-center gap-7 text-sm font-medium">
             <span className="text-brand-cyan">Dashboard</span>
-            <span className="text-slate-500">Alerts</span>
-            <span className="text-slate-500">Sentiment</span>
-            <span className="text-slate-500">Portfolio</span>
           </nav>
         </div>
         <div className="flex items-center gap-4">
@@ -184,7 +217,6 @@ export default function Dashboard() {
             <p className="text-white text-sm font-semibold">
               {getGreeting()}, {firstName}
             </p>
-            <p className="text-slate-500 text-xs">Investor Cockpit Active</p>
           </div>
           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand-cyan to-brand-green flex items-center justify-center text-slate-950 font-bold text-sm shrink-0">
             {initial}
@@ -195,12 +227,6 @@ export default function Dashboard() {
               className="text-slate-400 hover:text-brand-cyan text-xs transition px-2.5 py-1.5 rounded-lg hover:bg-slate-800"
             >
               Refresh
-            </button>
-            <button
-              onClick={() => navigate('/onboarding')}
-              className="text-slate-400 hover:text-brand-cyan text-xs transition px-2.5 py-1.5 rounded-lg hover:bg-slate-800"
-            >
-              Preferences
             </button>
             <button
               onClick={handleLogout}
@@ -312,12 +338,12 @@ export default function Dashboard() {
                             </AreaChart>
                           </ResponsiveContainer>
                         )}
-                        <VoteButtons sectionKey="prices" itemId={coin.id} votes={votes} onVote={handleVote} />
                       </li>
                     );
                   })}
                 </ul>
               )}
+              <VoteButtons sectionKey="prices" itemId="overview" contentSnapshot={pricesSnapshot} votes={votes} onVote={handleVote} />
             </SectionCard>
 
             {/* AI Insight */}
@@ -326,9 +352,9 @@ export default function Dashboard() {
                 <span className="w-10 h-10 rounded-lg bg-brand-cyan/10 border border-brand-cyan/30 flex items-center justify-center shrink-0">
                   <img src={logo} alt="" className="w-6 h-6" />
                 </span>
-                <p className="text-slate-300 text-sm leading-relaxed">{data.insight}</p>
+                <div className="space-y-2">{renderInsight(data.insight)}</div>
               </div>
-              <VoteButtons sectionKey="insight" itemId="daily" votes={votes} onVote={handleVote} />
+              <VoteButtons sectionKey="insight" itemId="daily" contentSnapshot={data.insight} votes={votes} onVote={handleVote} />
             </SectionCard>
 
             {/* Market News */}
@@ -353,11 +379,11 @@ export default function Dashboard() {
                       >
                         {item.title}
                       </a>
-                      <VoteButtons sectionKey="news" itemId={String(item.id)} votes={votes} onVote={handleVote} />
                     </li>
                   ))}
                 </ul>
               )}
+              <VoteButtons sectionKey="news" itemId="overview" contentSnapshot={newsSnapshot} votes={votes} onVote={handleVote} />
             </SectionCard>
 
             {/* Fun Meme */}
@@ -371,7 +397,13 @@ export default function Dashboard() {
                 }}
               />
               <p className="text-slate-400 text-sm mt-3">{data.meme.title}</p>
-              <VoteButtons sectionKey="meme" itemId={data.meme.id} votes={votes} onVote={handleVote} />
+              <VoteButtons
+                sectionKey="meme"
+                itemId={data.meme.id}
+                contentSnapshot={`${data.meme.title} (${data.meme.url})`}
+                votes={votes}
+                onVote={handleVote}
+              />
             </SectionCard>
           </div>
         )}
