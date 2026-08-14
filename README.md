@@ -4,7 +4,7 @@
 ![TypeScript](https://img.shields.io/badge/typescript-5%2F6-3178C6?logo=typescript&logoColor=white)
 ![Express](https://img.shields.io/badge/express-4.19-black?logo=express)
 ![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?logo=mongodb&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-13%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-19%20passing-brightgreen)
 ![CI](https://img.shields.io/badge/CI-GitHub%20Actions-2088FF?logo=githubactions&logoColor=white)
 ![Deployed](https://img.shields.io/badge/status-deployed-success)
 
@@ -16,7 +16,7 @@ A personalized crypto investor dashboard, built for the Moveo "AI Crypto Advisor
 - **Express backend** — repository-pattern data layer over Mongoose, deployed on Render
 - **MongoDB Atlas** — Users, Preferences (enum-validated), Votes (upsert-by-key)
 - **Three live external integrations** — CoinGecko (prices), free public RSS feeds (news), NVIDIA NIM (AI insight) — each with an independent, non-throwing fallback
-- **Vitest test suite** — 13 tests across schema validation, repository regression guards, and route integration
+- **Vitest test suite** — 19 tests across schema validation, repository regression guards, and route integration/logic
 - **CI pipeline** — build + test on every push/PR via GitHub Actions
 
 **Live app:** <https://coinsage-adidoshka.vercel.app>
@@ -56,7 +56,7 @@ See [CLAUDE.md](CLAUDE.md) for the full file-by-file architecture walkthrough an
 
    ```bash
    cd backend
-   npm test                 # Vitest, 13 tests, in-memory Mongo — no real DB needed
+   npm test                 # Vitest, 19 tests, in-memory Mongo for DB-touching tests — no real DB needed
    ```
 
 ## 📐 Architecture
@@ -99,7 +99,7 @@ crypto-advisor/
 │   ├── src/
 │   │   ├── pages/              # Login, Register, Onboarding, Dashboard
 │   │   ├── components/         # Logo, icons, SentimentCard, AuthLayout, FormField (shared across pages)
-│   │   ├── context/AuthContext.tsx
+│   │   ├── context/          # AuthContext.ts, AuthProvider.tsx, useAuth.ts
 │   │   └── services/api.ts
 │   └── tests/                 # empty placeholder — no frontend test suite yet
 │
@@ -127,13 +127,14 @@ News has no key to configure — see below.
 
 ## 🧪 Testing
 
-13 Vitest tests across 3 files under `backend/tests/` (mirrors `src/`'s folder layout), all running against an in-memory MongoDB (`mongodb-memory-server`) — no external DB or network required:
+19 Vitest tests across 4 files under `backend/tests/` (mirrors `src/`'s folder layout); tests that touch the DB run against an in-memory MongoDB (`mongodb-memory-server`) — no external DB or network required:
 
 | File | Focus |
 | --- | --- |
 | `tests/models/Preference.test.ts` | Schema enum validation (assets/investorType/contentTypes) |
 | `tests/repositories/VoteRepository.test.ts` | Upsert-by-key behavior + a regression guard for a real bug found via live testing (see AI summary below) |
 | `tests/routes/auth.test.ts` | Register/login integration tests via `supertest` — password never in response, malformed-email/duplicate-email/short-password rejected, wrong-password 401 |
+| `tests/routes/dashboard.test.ts` | Pure unit tests for `pickMeme`'s preference-matching/fallback logic — no DB or network |
 
 CI (`.github/workflows/ci.yml`) runs backend build+test and frontend build+lint on every push/PR to `main`.
 

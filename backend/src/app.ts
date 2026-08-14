@@ -19,6 +19,13 @@ app.use(helmet());
 app.use(cors({ origin: process.env.FRONTEND_URL || 'http://localhost:5173', credentials: true }));
 app.use(express.json());
 
+// Every response here is dynamic/authenticated JSON — without this, browsers can heuristically
+// cache responses (404s included, per HTTP spec) and silently replay a stale one on retry.
+app.use((_req, res, next) => {
+  res.set('Cache-Control', 'no-store');
+  next();
+});
+
 // Scoped to auth only — the actual brute-force surface — not applied globally.
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,

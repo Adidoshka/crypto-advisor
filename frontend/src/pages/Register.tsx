@@ -1,13 +1,11 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../services/api';
-import { useAuth } from '../context/AuthContext';
 import AuthLayout from '../components/AuthLayout';
 import FormField from '../components/FormField';
 import { UserIcon, MailIcon, LockIcon, EyeIcon } from '../components/icons';
 
 export default function Register() {
-  const { login } = useAuth();
   const navigate = useNavigate();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -21,9 +19,9 @@ export default function Register() {
     setError('');
     setIsSubmitting(true);
     try {
-      const { data } = await api.post('/auth/register', { name, email, password });
-      login(data.token, name);
-      navigate('/onboarding');
+      await api.post('/auth/register', { name, email, password });
+      // No auto-login — send them to sign in with the account they just created.
+      navigate('/login', { state: { justRegistered: true } });
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error;
       setError(msg ?? 'Registration failed');
@@ -33,8 +31,8 @@ export default function Register() {
 
   return (
     <AuthLayout>
-      <h2 className="font-outfit font-bold text-3xl text-white mb-1">Create Your Account</h2>
-      <p className="text-slate-400 text-sm mb-8">Join CoinSage and get a dashboard tailored to you.</p>
+      <h2 className="font-outfit font-bold text-3xl 2xl:text-4xl text-white mb-1">Create Your Account</h2>
+      <p className="text-slate-400 text-sm 2xl:text-base mb-8">Join CoinSage and get a dashboard tailored to you.</p>
 
       {error && <p className="text-red-400 text-sm mb-4">{error}</p>}
 
@@ -73,7 +71,7 @@ export default function Register() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full bg-brand-cyan hover:brightness-110 disabled:opacity-60 text-slate-950 font-semibold rounded-lg py-2.5 transition"
+          className="w-full bg-brand-cyan hover:brightness-110 disabled:opacity-60 text-slate-950 font-semibold rounded-lg py-2.5 2xl:py-3.5 2xl:text-lg transition"
         >
           {isSubmitting ? 'Creating Account…' : 'Create Account'}
         </button>
